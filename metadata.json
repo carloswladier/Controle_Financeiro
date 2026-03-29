@@ -1,0 +1,5 @@
+{
+  "name": "Controle Financeiro",
+  "description": "Painel de controle financeiro para gestão de contas CPF e CNPJ.",
+  "requestFramePermissions": []
+}
