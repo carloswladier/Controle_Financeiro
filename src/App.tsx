@@ -27,7 +27,8 @@ export default function App() {
   const [isMigrating, setIsMigrating] = useState(false);
 
   // Check if Supabase is configured
-  const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const isSupabaseConfigured = !!(import.meta.env.VITE_SUPABASE_URL || (typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL)) && 
+                               !!(import.meta.env.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' && process.env.VITE_SUPABASE_ANON_KEY));
 
   const hasLocalData = !!localStorage.getItem('financial_entries') && JSON.parse(localStorage.getItem('financial_entries') || '[]').length > 0;
 
@@ -86,6 +87,11 @@ export default function App() {
   };
 
   const fetchEntries = async () => {
+    if (!supabase) {
+      setError('Supabase não está configurado corretamente.');
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -118,7 +124,7 @@ export default function App() {
   };
 
   const handleAddEntry = async (entryData: Omit<FinancialEntry, 'id' | 'createdAt'>) => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || !supabase) {
       const newEntry: FinancialEntry = {
         ...entryData,
         id: crypto.randomUUID(),
@@ -170,7 +176,7 @@ export default function App() {
   const handleDeleteEntry = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este registro?')) return;
 
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || !supabase) {
       const updatedEntries = entries.filter(e => e.id !== id);
       setEntries(updatedEntries);
       localStorage.setItem('financial_entries', JSON.stringify(updatedEntries));
@@ -192,7 +198,7 @@ export default function App() {
   };
 
   const handleUpdateEntry = async (id: string, entryData: Omit<FinancialEntry, 'id' | 'createdAt'>) => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || !supabase) {
       const updatedEntries = entries.map(e => 
         e.id === id ? { ...e, ...entryData } : e
       );
